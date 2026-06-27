@@ -26,3 +26,25 @@ app.listen(PORT,()=>{
 console.log("Server running on port",PORT);
 
 });
+app.get("/test-firestore", async (req, res) => {
+  try {
+    const collections = await db.listCollections();
+
+    console.log("Firestore connected");
+
+    res.json({
+      success: true,
+      collections: collections.map(c => c.id)
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+
+  }
+});
