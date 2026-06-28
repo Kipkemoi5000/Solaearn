@@ -9,7 +9,7 @@ const DAY = 24 * 60 * 60 * 1000;
 router.post("/", async (req, res) => {
 
     console.log("🎁 Daily reward request");
-
+console.log("UID:", uid);
     try {
 
         const { uid } = req.body;
@@ -76,11 +76,11 @@ router.post("/", async (req, res) => {
                 createdAt: now
 
             });
-
+console.log("Transaction history document queued.");
         });
 
         console.log("✅ Daily reward added");
-
+console.log("Daily reward transaction completed.");
         res.json({
 
             success: true,
