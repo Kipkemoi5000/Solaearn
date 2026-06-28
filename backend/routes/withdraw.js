@@ -7,7 +7,7 @@ const MIN_WITHDRAW = 50;
 
 router.post("/", async (req, res) => {
 
-    console.log("💰 Withdrawal request");
+    console.log(" Withdrawal request");
 
     try {
 
@@ -71,12 +71,15 @@ router.post("/", async (req, res) => {
 
             }
 
+            const now = Date.now();
+
             transaction.update(userRef, {
 
                 balance: admin.firestore.FieldValue.increment(-value)
 
             });
 
+            // Pending withdrawal request
             const withdrawalRef =
                 db.collection("withdrawals").doc();
 
@@ -92,14 +95,40 @@ router.post("/", async (req, res) => {
 
                 status: "pending",
 
-                createdAt: Date.now()
+                createdAt: now
+
+            });
+
+            // User transaction history
+            const transactionRef =
+                userRef
+                    .collection("transactions")
+                    .doc();
+
+            transaction.set(transactionRef, {
+
+                type: "withdrawal",
+
+                title: "Withdrawal Request",
+
+                amount: -value,
+
+                status: "pending",
+
+                phone,
+
+                createdAt: now
 
             });
 
         });
+
         res.json({
+
             success: true,
+
             message: "Withdrawal request submitted"
+
         });
 
     } catch (error) {
@@ -107,8 +136,11 @@ router.post("/", async (req, res) => {
         console.error(error);
 
         res.status(500).json({
+
             success: false,
+
             message: error.message
+
         });
 
     }
@@ -116,4 +148,3 @@ router.post("/", async (req, res) => {
 });
 
 module.exports = router;
-       

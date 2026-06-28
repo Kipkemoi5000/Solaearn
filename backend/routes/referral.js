@@ -8,7 +8,7 @@ const WELCOME_BONUS = 5;
 
 router.post("/", async (req, res) => {
 
-    console.log("📨 Referral request received");
+    console.log(" Referral request received");
 
     try {
 
@@ -17,8 +17,11 @@ router.post("/", async (req, res) => {
         if (!uid) {
 
             return res.status(400).json({
+
                 success: false,
+
                 message: "User ID is required"
+
             });
 
         }
@@ -48,11 +51,13 @@ router.post("/", async (req, res) => {
 
             }
 
-            // No referral link used
+            // No referral used
             if (!user.referredBy) {
 
                 transaction.update(userRef, {
+
                     rewarded: true
+
                 });
 
                 console.log("No referral");
@@ -65,7 +70,9 @@ router.post("/", async (req, res) => {
             if (user.referredBy === uid) {
 
                 transaction.update(userRef, {
+
                     rewarded: true
+
                 });
 
                 console.log("Self referral blocked");
@@ -84,7 +91,9 @@ router.post("/", async (req, res) => {
             if (!referrerSnap.exists) {
 
                 transaction.update(userRef, {
+
                     rewarded: true
+
                 });
 
                 console.log("Invalid referral");
@@ -95,31 +104,69 @@ router.post("/", async (req, res) => {
 
             console.log("Rewarding users");
 
+            // Reward referrer
             transaction.update(referrerRef, {
 
                 balance:
-                admin.firestore.FieldValue.increment(REFERRER_REWARD),
+                    admin.firestore.FieldValue.increment(REFERRER_REWARD),
 
                 referrals:
-                admin.firestore.FieldValue.increment(1),
+                    admin.firestore.FieldValue.increment(1),
 
                 referralReward:
-                admin.firestore.FieldValue.increment(REFERRER_REWARD)
+                    admin.firestore.FieldValue.increment(REFERRER_REWARD)
 
             });
 
+            // Reward new user
             transaction.update(userRef, {
 
                 balance:
-                admin.firestore.FieldValue.increment(WELCOME_BONUS),
+                    admin.firestore.FieldValue.increment(WELCOME_BONUS),
 
                 rewarded: true
 
             });
 
+            // Transaction history for referrer
+            const referrerTransactionRef =
+                referrerRef
+                    .collection("transactions")
+                    .doc();
+
+            transaction.set(referrerTransactionRef, {
+
+                type: "referral_bonus",
+
+                title: "Referral Bonus",
+
+                amount: REFERRER_REWARD,
+
+                createdAt: Date.now()
+
+            });
+
+            // Transaction history for new user
+            const welcomeTransactionRef =
+                userRef
+                    .collection("transactions")
+                    .doc();
+
+            transaction.set(welcomeTransactionRef, {
+
+                type: "welcome_bonus",
+
+                title: "Welcome Bonus",
+
+                amount: WELCOME_BONUS,
+
+                createdAt: Date.now()
+
+            });
+
         });
 
-        console.log("✅ Referral completed");
+        console.log(" Referral completed");
 
         res.json({
 

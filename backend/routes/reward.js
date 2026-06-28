@@ -18,9 +18,9 @@ router.post("/", async (req, res) => {
 
             return res.status(400).json({
 
-                success:false,
+                success: false,
 
-                message:"User ID is required"
+                message: "User ID is required"
 
             });
 
@@ -28,11 +28,11 @@ router.post("/", async (req, res) => {
 
         const userRef = db.collection("users").doc(uid);
 
-        await db.runTransaction(async(transaction)=>{
+        await db.runTransaction(async (transaction) => {
 
             const snap = await transaction.get(userRef);
 
-            if(!snap.exists){
+            if (!snap.exists) {
 
                 throw new Error("User not found");
 
@@ -44,20 +44,36 @@ router.post("/", async (req, res) => {
 
             const lastClaim = user.lastClaim || 0;
 
-            if(now-lastClaim<DAY){
+            if (now - lastClaim < DAY) {
 
-                const remaining = DAY-(now-lastClaim);
+                const remaining = DAY - (now - lastClaim);
 
-                throw new Error("NEXT:"+remaining);
+                throw new Error("NEXT:" + remaining);
 
             }
 
-            transaction.update(userRef,{
+            transaction.update(userRef, {
 
-                balance:
-                admin.firestore.FieldValue.increment(DAILY_REWARD),
+                balance: admin.firestore.FieldValue.increment(DAILY_REWARD),
 
-                lastClaim:now
+                lastClaim: now
+
+            });
+
+            // Save transaction history
+            const transactionRef = userRef
+                .collection("transactions")
+                .doc();
+
+            transaction.set(transactionRef, {
+
+                type: "daily_reward",
+
+                title: "Daily Reward",
+
+                amount: DAILY_REWARD,
+
+                createdAt: now
 
             });
 
@@ -67,21 +83,25 @@ router.post("/", async (req, res) => {
 
         res.json({
 
-            success:true,
+            success: true,
 
-            reward:DAILY_REWARD
+            reward: DAILY_REWARD,
+
+            message: "Daily reward claimed successfully."
 
         });
 
-    }catch(error){
+    } catch (error) {
 
-        if(error.message.startsWith("NEXT:")){
+        if (error.message.startsWith("NEXT:")) {
 
             return res.json({
 
-                success:false,
+                success: false,
 
-                remaining:Number(error.message.replace("NEXT:",""))
+                remaining: Number(
+                    error.message.replace("NEXT:", "")
+                )
 
             });
 
@@ -91,9 +111,9 @@ router.post("/", async (req, res) => {
 
         res.status(500).json({
 
-            success:false,
+            success: false,
 
-            message:error.message
+            message: error.message
 
         });
 
@@ -101,4 +121,4 @@ router.post("/", async (req, res) => {
 
 });
 
-module.exports=router;
+module.exports = router;
