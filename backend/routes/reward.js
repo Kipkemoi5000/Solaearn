@@ -9,10 +9,11 @@ const DAY = 24 * 60 * 60 * 1000;
 router.post("/", async (req, res) => {
 
     console.log("🎁 Daily reward request");
-console.log("UID:", uid);
+
     try {
 
         const { uid } = req.body;
+        console.log("UID:", uid);
 
         if (!uid) {
 
