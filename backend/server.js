@@ -6,16 +6,14 @@ const { db } = require("./firebase");
 const referralRoute = require("./routes/referral");
 const rewardRoute = require("./routes/reward");
 const withdrawRoute = require("./routes/withdraw");
-
-// Admin route temporarily disabled until adminAuth middleware is created
-// const adminRoute = require("./routes/admin");
+const adminRoute = require("./routes/admin");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-console.log("🚀 Starting SolaEarn Backend v1.6.0");
+console.log("🚀 Starting SolaEarn Backend v1.7.0");
 
 // --------------------
 // Home
@@ -28,7 +26,7 @@ app.get("/", (req, res) => {
     res.json({
         success: true,
         name: "SolaEarn Backend",
-        version: "1.6.0",
+        version: "1.7.0",
         status: "Running"
     });
 
@@ -69,16 +67,12 @@ app.get("/test-firestore", async (req, res) => {
 // --------------------
 
 app.use("/referral", referralRoute);
-
 app.use("/reward", rewardRoute);
-
 app.use("/withdraw", withdrawRoute);
-
-// Enable after creating middleware/adminAuth.js
-// app.use("/admin", adminRoute);
+app.use("/admin", adminRoute);
 
 // --------------------
-// 404
+// 404 Handler
 // --------------------
 
 app.use((req, res) => {
@@ -93,7 +87,7 @@ app.use((req, res) => {
 });
 
 // --------------------
-// Error Handler
+// Global Error Handler
 // --------------------
 
 app.use((err, req, res, next) => {
