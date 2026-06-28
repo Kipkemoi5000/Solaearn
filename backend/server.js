@@ -6,15 +6,16 @@ const { db } = require("./firebase");
 const referralRoute = require("./routes/referral");
 const rewardRoute = require("./routes/reward");
 const withdrawRoute = require("./routes/withdraw");
-const adminRoute = require("./routes/admin");
-const taskRoute = require("./routes/task");
+
+// Admin route temporarily disabled until adminAuth middleware is created
+// const adminRoute = require("./routes/admin");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-console.log(" Starting SolaEarn Backend v2.0.0");
+console.log("🚀 Starting SolaEarn Backend v1.6.0");
 
 // --------------------
 // Home
@@ -25,15 +26,10 @@ app.get("/", (req, res) => {
     console.log("GET /");
 
     res.json({
-
         success: true,
-
         name: "SolaEarn Backend",
-
-        version: "2.0.0",
-
+        version: "1.6.0",
         status: "Running"
-
     });
 
 });
@@ -48,16 +44,11 @@ app.get("/test-firestore", async (req, res) => {
 
     try {
 
-        const collections =
-        await db.listCollections();
+        const collections = await db.listCollections();
 
         res.json({
-
             success: true,
-
-            collections:
-            collections.map(c => c.id)
-
+            collections: collections.map(c => c.id)
         });
 
     } catch (error) {
@@ -65,11 +56,8 @@ app.get("/test-firestore", async (req, res) => {
         console.error(error);
 
         res.status(500).json({
-
             success: false,
-
             message: error.message
-
         });
 
     }
@@ -86,9 +74,8 @@ app.use("/reward", rewardRoute);
 
 app.use("/withdraw", withdrawRoute);
 
-app.use("/admin", adminRoute);
-
-app.use("/tasks", taskRoute);
+// Enable after creating middleware/adminAuth.js
+// app.use("/admin", adminRoute);
 
 // --------------------
 // 404
@@ -96,22 +83,11 @@ app.use("/tasks", taskRoute);
 
 app.use((req, res) => {
 
-    console.log(
-
-        "404",
-
-        req.method,
-
-        req.originalUrl
-
-    );
+    console.log("404", req.method, req.originalUrl);
 
     res.status(404).json({
-
         success: false,
-
         message: "Endpoint not found"
-
     });
 
 });
@@ -122,35 +98,19 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
 
-    console.error(
-
-        "Unhandled Error:",
-
-        err
-
-    );
+    console.error("Unhandled Error:", err);
 
     res.status(500).json({
-
         success: false,
-
         message: "Internal Server Error"
-
     });
 
 });
 
-const PORT =
-process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
 
-    console.log(
-
-        " Server running on port",
-
-        PORT
-
-    );
+    console.log(`✅ Server running on port ${PORT}`);
 
 });
