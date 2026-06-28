@@ -1,32 +1,91 @@
 const express = require("express");
 const router = express.Router();
 
-const { db, admin } = require("../firebase");
+const { db } = require("../firebase");
 const adminAuth = require("../middleware/adminAuth");
 
-console.log("Admin Route Loaded");
+// --------------------
+// Dashboard Statistics
+// --------------------
 
-// ------------------------------------
-// Protect ALL admin routes
-// ------------------------------------
-
-router.use(adminAuth);
-
-// ------------------------------------
-// Get Pending Withdrawals
-// ------------------------------------
-
-router.get("/withdrawals", async (req, res) => {
-
-    console.log("Loading pending withdrawals");
+router.post("/stats", adminAuth, async (req, res) => {
 
     try {
 
-        const snapshot = await db
-        .collection("withdrawals")
-        .where("status","==","pending")
-        .orderBy("createdAt","desc")
-        .get();
+        const users = await db.collection("users").get();
+        const withdrawals = await db.collection("withdrawals").get();
+
+        let totalUsers = users.size;
+        let totalBalance = 0;
+        let totalReferralRewards = 0;
+        let pendingWithdrawals = 0;
+
+        users.forEach(doc => {
+
+            const data = doc.data();
+
+            totalBalance += data.balance || 0;
+            totalReferralRewards += data.referralReward || 0;
+
+        });
+
+        withdrawals.forEach(doc => {
+
+            const data = doc.data();
+
+            if (data.status === "pending") {
+
+                pendingWithdrawals++;
+
+            }
+
+        });
+
+        res.json({
+
+            success: true,
+
+            stats: {
+
+                totalUsers,
+
+                totalBalance,
+
+                totalReferralRewards,
+
+                pendingWithdrawals
+
+            }
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: error.message
+
+        });
+
+    }
+
+});
+
+// --------------------
+// Pending Withdrawals
+// --------------------
+
+router.post("/withdrawals", adminAuth, async (req, res) => {
+
+    try {
+
+        const snapshot = await db.collection("withdrawals")
+            .where("status", "==", "pending")
+            .get();
 
         const withdrawals = [];
 
@@ -44,221 +103,21 @@ router.get("/withdrawals", async (req, res) => {
 
         res.json({
 
-            success:true,
-
-            count:withdrawals.length,
+            success: true,
 
             withdrawals
 
         });
 
-    } catch(error) {
+    } catch (error) {
 
         console.error(error);
 
         res.status(500).json({
 
-            success:false,
+            success: false,
 
-            message:error.message
-
-        });
-
-    }
-
-});
-
-// ------------------------------------
-// Approve Withdrawal
-// ------------------------------------
-
-router.post("/approve", async (req,res)=>{
-
-    console.log("Approve Request");
-
-    try{
-
-        const { id } = req.body;
-
-        if(!id){
-
-            return res.status(400).json({
-
-                success:false,
-
-                message:"Missing withdrawal id"
-
-            });
-
-        }
-
-        const withdrawRef =
-        db.collection("withdrawals").doc(id);
-
-        const snap =
-        await withdrawRef.get();
-
-        if(!snap.exists){
-
-            return res.status(404).json({
-
-                success:false,
-
-                message:"Withdrawal not found"
-
-            });
-
-        }
-
-        const withdrawal = snap.data();
-
-        if(withdrawal.status !== "pending"){
-
-            return res.json({
-
-                success:false,
-
-                message:"Withdrawal already processed"
-
-            });
-
-        }
-
-        await withdrawRef.update({
-
-            status:"approved",
-
-            approvedAt:Date.now(),
-
-            approvedBy:req.admin.email
-
-        });
-
-        console.log("Withdrawal Approved");
-
-        res.json({
-
-            success:true,
-
-            message:"Withdrawal approved"
-
-        });
-
-    }catch(error){
-
-        console.error(error);
-
-        res.status(500).json({
-
-            success:false,
-
-            message:error.message
-
-        });
-
-    }
-
-});
-
-// ------------------------------------
-// Reject Withdrawal
-// ------------------------------------
-
-router.post("/reject", async (req,res)=>{
-
-    console.log("Reject Request");
-
-    try{
-
-        const { id } = req.body;
-
-        if(!id){
-
-            return res.status(400).json({
-
-                success:false,
-
-                message:"Missing withdrawal id"
-
-            });
-
-        }
-
-        const withdrawRef =
-        db.collection("withdrawals").doc(id);
-
-        const snap =
-        await withdrawRef.get();
-
-        if(!snap.exists){
-
-            return res.status(404).json({
-
-                success:false,
-
-                message:"Withdrawal not found"
-
-            });
-
-        }
-
-        const withdrawal =
-        snap.data();
-
-        if(withdrawal.status !== "pending"){
-
-            return res.json({
-
-                success:false,
-
-                message:"Withdrawal already processed"
-
-            });
-
-        }
-
-        await db.collection("users")
-        .doc(withdrawal.uid)
-        .update({
-
-            balance:
-            admin.firestore.FieldValue.increment(
-
-                withdrawal.amount
-
-            )
-
-        });
-
-        await withdrawRef.update({
-
-            status:"rejected",
-
-            rejectedAt:Date.now(),
-
-            rejectedBy:req.admin.email
-
-        });
-
-        console.log("Withdrawal Rejected");
-
-        res.json({
-
-            success:true,
-
-            message:"Withdrawal rejected and balance refunded"
-
-        });
-
-    }catch(error){
-
-        console.error(error);
-
-        res.status(500).json({
-
-            success:false,
-
-            message:error.message
+            message: error.message
 
         });
 
