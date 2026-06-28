@@ -7,13 +7,14 @@ const referralRoute = require("./routes/referral");
 const rewardRoute = require("./routes/reward");
 const withdrawRoute = require("./routes/withdraw");
 const adminRoute = require("./routes/admin");
+const approveWithdrawalRoute = require("./routes/approveWithdrawal");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-console.log("🚀 Starting SolaEarn Backend v1.7.0");
+console.log(" Starting SolaEarn Backend v1.8.0");
 
 // --------------------
 // Home
@@ -26,7 +27,7 @@ app.get("/", (req, res) => {
     res.json({
         success: true,
         name: "SolaEarn Backend",
-        version: "1.7.0",
+        version: "1.8.0",
         status: "Running"
     });
 
@@ -70,6 +71,7 @@ app.use("/referral", referralRoute);
 app.use("/reward", rewardRoute);
 app.use("/withdraw", withdrawRoute);
 app.use("/admin", adminRoute);
+app.use("/approve-withdrawal", approveWithdrawalRoute);
 
 // --------------------
 // 404 Handler
@@ -105,6 +107,6 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
 
-    console.log(`✅ Server running on port ${PORT}`);
+    console.log(` Server running on port ${PORT}`);
 
 });
