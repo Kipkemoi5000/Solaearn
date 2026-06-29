@@ -9,6 +9,8 @@ const DAY = 24 * 60 * 60 * 1000;
 router.post("/", async (req, res) => {
 
     console.log("🎁 Daily reward request");
+    
+    
 
     try {
 
@@ -61,26 +63,27 @@ router.post("/", async (req, res) => {
 
             });
 
-            // Save transaction history
-            const transactionRef = userRef
-                .collection("transactions")
-                .doc();
-
-            transaction.set(transactionRef, {
-
-                type: "daily_reward",
-
-                title: "Daily Reward",
-
-                amount: DAILY_REWARD,
-
-                createdAt: now
-
-            });
-console.log("Transaction history document queued.");
+       
         });
 
         console.log("✅ Daily reward added");
+        await db
+    .collection("users")
+    .doc(uid)
+    .collection("transactions")
+    .add({
+
+        type: "daily_reward",
+
+        title: "Daily Reward",
+
+        amount: DAILY_REWARD,
+
+        createdAt: Date.now()
+
+    });
+
+console.log("✅ Transaction history saved");
 console.log("Daily reward transaction completed.");
         res.json({
 
