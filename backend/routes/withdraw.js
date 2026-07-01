@@ -66,8 +66,10 @@ router.post("/", async (req, res) => {
             const user = userSnap.data();
 
             if ((user.balance || 0) < value) {
-
-                throw new Error("Insufficient balance");
+    const err = new Error("Insufficient balance");
+    err.statusCode = 400;
+    throw err;
+}
 
             }
 
